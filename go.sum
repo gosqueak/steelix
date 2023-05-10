@@ -4,7 +4,5 @@ github.com/gosqueak/jwt v0.0.0-20230510165842-1b5cd2f15c4b h1:XxRXkhQkS+RDhow2SB
 github.com/gosqueak/jwt v0.0.0-20230510165842-1b5cd2f15c4b/go.mod h1:uRizwGYohVTUVNT9fCzzPQHSLMoqklmFKmEC2SNPTgQ=
 github.com/mattn/go-sqlite3 v1.14.16 h1:yOQRA0RpS5PFz/oikGwBEqvAWhWg5ufRz4ETLjwpU1Y=
 github.com/mattn/go-sqlite3 v1.14.16/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
-github.com/rebeljah/gosqueak/src/services/auth v0.0.0-20230508142059-35120e3c551b h1:QIuf0I/tH3s3yeeKE3qtdLhIVaYrZ0LY5EhkGbDOeF0=
-github.com/rebeljah/gosqueak/src/services/auth v0.0.0-20230508142059-35120e3c551b/go.mod h1:mXKF3SAC+U6jdhW8rQT0HyO9UglYxRWUvM7L5KL0GhE=
 golang.org/x/crypto v0.9.0 h1:LF6fAI+IutBocDJ2OT0Q1g8plpYljMZ4+lty+dsqw3g=
 golang.org/x/crypto v0.9.0/go.mod h1:yrmDGqONDYtNj3tH8X9dzUun2m2lzPa9ngI6/RUPGR0=
