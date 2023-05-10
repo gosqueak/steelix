@@ -13,7 +13,7 @@ import (
 
 	kit "github.com/gosqueak/apikit"
 	"github.com/gosqueak/jwt"
-	dbkit "github.com/gosqueak/umbreon/database"
+	dbkit "github.com/gosqueak/steelix/database"
 )
 
 const (

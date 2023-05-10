@@ -1,4 +1,4 @@
-module github.com/gosqueak/umbreon
+module github.com/gosqueak/steelix
 
 go 1.20
 

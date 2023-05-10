@@ -12,8 +12,8 @@ import (
 
 	"github.com/gosqueak/jwt"
 	"github.com/gosqueak/jwt/rs256"
-	"github.com/gosqueak/umbreon/api"
-	"github.com/gosqueak/umbreon/database"
+	"github.com/gosqueak/steelix/api"
+	"github.com/gosqueak/steelix/database"
 )
 
 const testDbFp = "testDb.sqlite"
