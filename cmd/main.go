@@ -2,17 +2,16 @@ package main
 
 import (
 	"github.com/gosqueak/jwt"
+	"github.com/gosqueak/leader/team"
 	"github.com/gosqueak/jwt/rs256"
 	"github.com/gosqueak/steelix/api"
 	"github.com/gosqueak/steelix/database"
 )
 
-const (
-	Addr       = "0.0.0.0:8081"
-	JwtActorId = "AUTHSERVICE"
-)
-
 func main() {
+	tm := team.Download("https://raw.githubusercontent.com/gosqueak/leader/main/Teamfile.json")
+	steelix := tm["steelix"]
+
 	db := database.Load("users.sqlite")
 
 	keyBytes, err := rs256.LoadKeyBytes("jwtrsa.private")
@@ -22,13 +21,13 @@ func main() {
 
 	iss := jwt.NewIssuer(
 		rs256.ParsePrivateBytes(keyBytes),
-		JwtActorId,
+		steelix.JWTInfo.IssuerName,
 	)
 	aud := jwt.NewAudience(
 		iss.PublicKey(),
-		JwtActorId,
+		steelix.JWTInfo.AudienceName,
 	)
 
-	serv := api.NewServer(Addr, db, iss, aud)
+	serv := api.NewServer(steelix.Url, db, iss, aud)
 	serv.Run()
 }
