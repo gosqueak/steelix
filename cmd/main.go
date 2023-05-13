@@ -1,15 +1,17 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gosqueak/jwt"
-	"github.com/gosqueak/leader/team"
 	"github.com/gosqueak/jwt/rs256"
+	"github.com/gosqueak/leader/team"
 	"github.com/gosqueak/steelix/api"
 	"github.com/gosqueak/steelix/database"
 )
 
 func main() {
-	tm := team.Download("https://raw.githubusercontent.com/gosqueak/leader/main/Teamfile.json")
+	tm := team.Download(os.Getenv("TEAMFILE_JSON_URL"))
 	steelix := tm["steelix"]
 
 	db := database.Load("users.sqlite")
