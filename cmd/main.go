@@ -30,6 +30,6 @@ func main() {
 		steelix.JWTInfo.AudienceName,
 	)
 
-	serv := api.NewServer(steelix.Url, db, iss, aud)
+	serv := api.NewServer(steelix.ListenAddress, db, iss, aud)
 	serv.Run()
 }
