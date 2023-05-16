@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-	tm := team.Download(os.Getenv("TEAMFILE_JSON_URL"))
-	steelix := tm["steelix"]
+	tm := team.Download(os.Getenv("TEAMFILE_URL"))
+	steelix := tm.Member("steelix")
 
 	db := database.Load("users.sqlite")
 

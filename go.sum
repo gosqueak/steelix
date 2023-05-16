@@ -2,8 +2,8 @@ github.com/gosqueak/apikit v0.0.0-20230512061655-69436fe1a189 h1:ph8liN949OhfXtH
 github.com/gosqueak/apikit v0.0.0-20230512061655-69436fe1a189/go.mod h1:R0V612jbuDNLaO4PFCyjWMAQZsF3ZQvrlWBv4vSFZYs=
 github.com/gosqueak/jwt v0.0.0-20230510165842-1b5cd2f15c4b h1:XxRXkhQkS+RDhow2SBc2YSu14KbwtJ/7gxnEopBJbHg=
 github.com/gosqueak/jwt v0.0.0-20230510165842-1b5cd2f15c4b/go.mod h1:uRizwGYohVTUVNT9fCzzPQHSLMoqklmFKmEC2SNPTgQ=
-github.com/gosqueak/leader v0.0.0-20230512053304-fca8a1a50112 h1:cu2wX012fbrs9yw/MVUOcXSokO4Ymtp20puYt64EkTY=
-github.com/gosqueak/leader v0.0.0-20230512053304-fca8a1a50112/go.mod h1:MmA57G6JkK71e4ZqkoEkJvSCJmEjIsxvrxgJMcX1QO0=
+github.com/gosqueak/leader v0.0.0-20230516182839-0e5d618b2c1b h1:4T3CqHGYH3Qy1RaiB9R/EDwkefp9nmCVfm+4wrQxm4A=
+github.com/gosqueak/leader v0.0.0-20230516182839-0e5d618b2c1b/go.mod h1:MmA57G6JkK71e4ZqkoEkJvSCJmEjIsxvrxgJMcX1QO0=
 github.com/mattn/go-sqlite3 v1.14.16 h1:yOQRA0RpS5PFz/oikGwBEqvAWhWg5ufRz4ETLjwpU1Y=
 github.com/mattn/go-sqlite3 v1.14.16/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
 golang.org/x/crypto v0.9.0 h1:LF6fAI+IutBocDJ2OT0Q1g8plpYljMZ4+lty+dsqw3g=

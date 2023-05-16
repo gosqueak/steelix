@@ -16,6 +16,10 @@ const (
 	HashKeyLength = 32
 )
 
+var ErrUserExists errorUserExists
+var ErrNoSuchUser errorNoSuchUser
+var ErrBadData errorBadData
+
 // models "users" table in DB
 type User struct {
 	Uid          string
@@ -132,14 +136,11 @@ func Load(fp string) *sql.DB {
 
 // (false, nil) if the err is sql.ErrNowRows; or (false, err) for any other error.
 func queryHasResults(e error) (ok bool, err error) {
-	if e != nil {
-		if e == sql.ErrNoRows {
-			return false, nil
-		}
-		return false, err // unexpected error
+	ok = err == nil
+	if err == sql.ErrNoRows {
+		err = nil
 	}
-
-	return true, nil
+	return ok, err
 }
 
 // convert bytes to a base64 string
@@ -164,7 +165,3 @@ type errorBadData struct{ info string }
 func (e errorBadData) Error() string {
 	return e.info
 }
-
-var ErrUserExists errorUserExists
-var ErrNoSuchUser errorNoSuchUser
-var ErrBadData errorBadData

@@ -24,7 +24,10 @@ func TestRegisterUser(t *testing.T) {
 	u := struct {
 		name string
 		pass string
-	}{"test1", "test1"}
+	}{
+		name: "test1",
+		pass: "test1",
+	}
 
 	// test adding a new user
 	err := database.RegisterUser(db, u.name, u.pass)
