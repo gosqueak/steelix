@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"database/sql"
 	"os"
 	"testing"
 
@@ -10,14 +9,12 @@ import (
 
 const testDbPath = "test.db"
 
-var db *sql.DB
-
 func TestMain(m *testing.M) {
 	m.Run()
 }
 
 func TestRegisterUser(t *testing.T) {
-	db = database.Load(testDbPath)
+	db := database.Load(testDbPath)
 	defer db.Close()
 	defer os.Remove(testDbPath)
 
@@ -64,7 +61,7 @@ func TestRegisterUser(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	db = database.Load(testDbPath)
+	db := database.Load(testDbPath)
 	defer db.Close()
 	defer os.Remove(testDbPath)
 
@@ -103,7 +100,7 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestUserExists(t *testing.T) {
-	db = database.Load(testDbPath)
+	db := database.Load(testDbPath)
 	defer db.Close()
 	defer os.Remove(testDbPath)
 

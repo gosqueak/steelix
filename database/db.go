@@ -136,8 +136,8 @@ func Load(fp string) *sql.DB {
 
 // (false, nil) if the err is sql.ErrNowRows; or (false, err) for any other error.
 func queryHasResults(e error) (ok bool, err error) {
-	ok = err == nil
-	if err == sql.ErrNoRows {
+	ok = e == nil
+	if e == sql.ErrNoRows {
 		err = nil
 	}
 	return ok, err

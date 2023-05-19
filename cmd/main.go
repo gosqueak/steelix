@@ -11,7 +11,12 @@ import (
 )
 
 func main() {
-	tm := team.Download(os.Getenv("TEAMFILE_URL"))
+	tm, err := team.Download(os.Getenv("TEAMFILE_URL"))
+
+	if err != nil {
+		panic(err)
+	}
+
 	steelix := tm.Member("steelix")
 
 	db := database.Load("users.sqlite")

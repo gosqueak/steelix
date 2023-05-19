@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"bytes"
+	"crypto/rsa"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -19,37 +20,31 @@ import (
 const testDbFp = "testDb.sqlite"
 const testKeyFp = "DEV.TEST.private"
 
-var server *api.Server
-var db *sql.DB
-var aud jwt.Audience
-var iss jwt.Issuer
+const (
+	testUsername = "testu"
+	testPassword = "testp"
+)
+
+var privKey *rsa.PrivateKey
 
 func TestMain(m *testing.M) {
-	keyBytes, err := rs256.LoadKeyBytes(testKeyFp)
+	privKeyBytes, err := rs256.LoadKeyBytes(testKeyFp)
 	if err != nil {
 		panic(err)
 	}
 
-	iss = jwt.NewIssuer(
-		rs256.ParsePrivateBytes(keyBytes),
-		"TESTISS",
-	)
+	privKey = rs256.ParsePrivateBytes(privKeyBytes)
 
-	aud = jwt.NewAudience(
-		iss.PublicKey(),
-		"AUTHAUD",
-	)
-	db = database.Load(testDbFp)
-	server = api.NewServer(":8080", db, iss, aud)
-	server.ConfigureRoutes()
-
-	defer db.Close()
 	defer os.Remove(testDbFp)
 	defer os.Remove(testKeyFp)
 	m.Run()
 }
 
 func TestRegister(t *testing.T) {
+	db := newDB()
+	defer db.Close()
+	_ = newServer(db, newIssuer(), newAudience())
+
 	payload := map[string]string{
 		"username": "",
 		"password": "",
@@ -88,6 +83,10 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
+	db := newDB()
+	defer db.Close()
+	_ = newServer(db, newIssuer(), newAudience())
+
 	payload := map[string]string{
 		"username": "",
 		"password": "",
@@ -99,12 +98,12 @@ func TestLogin(t *testing.T) {
 		password   string
 		statusCode int
 	}{
-		{"correct login", "testuser", "testpassword", 200},
-		{"wrong pwd", "testuser", "wrongpassword", 401},
+		{"correct login", testUsername, testPassword, 200},
+		{"wrong pwd", testUsername, "wrongpass", 401},
 		{"nonexistant user", "nonexistant", "password", 401},
 		{"empty username", "", "pass", 401},
 		{"empty pwd, fake username", "user", "", 401},
-		{"empty pwd, real username", "testuser", "", 401},
+		{"empty pwd, real username", testUsername, "", 401},
 		{"empty login", "", "", 401},
 	}
 
@@ -128,6 +127,12 @@ func TestLogin(t *testing.T) {
 }
 
 func TestHandleMakeAccessToken(t *testing.T) {
+	db := newDB()
+	defer db.Close()
+	iss := newIssuer()
+	aud := newAudience()
+	_ = newServer(db, iss, aud)
+
 	// fake issuer represents a MITM
 	fakeIss := jwt.NewIssuer(rs256.GeneratePrivateKey(), "fakeissuer")
 
@@ -200,6 +205,11 @@ func TestHandleMakeAccessToken(t *testing.T) {
 }
 
 func TestHandleMakeApitoken(t *testing.T) {
+	db := newDB()
+	defer db.Close()
+	iss := newIssuer()
+	_ = newServer(db, iss, newAudience())
+
 	fakeIss := jwt.NewIssuer(rs256.GeneratePrivateKey(), "fakeissuer")
 	apiAudience := jwt.NewAudience(iss.PublicKey(), "MSGSERVICE")
 
@@ -265,4 +275,34 @@ func TestHandleMakeApitoken(t *testing.T) {
 			continue
 		}
 	}
+}
+
+func newServer(db *sql.DB, iss jwt.Issuer, aud jwt.Audience) *api.Server {
+	server := api.NewServer(":8080", db, iss, aud)
+	http.DefaultServeMux = http.NewServeMux()
+
+	server.ConfigureRoutes()
+	database.RegisterUser(db, testUsername, testPassword)
+
+	return server
+}
+
+func newDB() *sql.DB {
+	os.Remove(testDbFp)
+	return database.Load(testDbFp)
+}
+
+
+func newIssuer() jwt.Issuer {
+	return jwt.NewIssuer(
+		privKey,
+		"TESTISS",
+	)
+}
+
+func newAudience() jwt.Audience {
+	return jwt.NewAudience(
+		&privKey.PublicKey,
+		"AUTHAUD",
+	)
 }
