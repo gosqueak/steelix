@@ -18,11 +18,11 @@ import (
 
 const (
 	RefreshTokenTTL = time.Hour * 24 * 7
-	ApiTokenTTL     = time.Second * 4
+	ApiTokenTTL     = time.Minute * 4
 	AccessTokenTTL  = time.Minute * 20
 )
 
-var validAudNames []string = []string{"MSGSERVICE", "ECDHSERVICE", "WEBSERVICE"}
+var validAudNames []string = []string{"alakazam", "klefki"}
 
 type Server struct {
 	db          *sql.DB
@@ -37,11 +37,11 @@ func NewServer(addr string, db *sql.DB, iss jwt.Issuer, aud jwt.Audience) *Serve
 
 func (s *Server) ConfigureRoutes() {
 	http.HandleFunc("/jwtkeypub", kit.LogMiddleware(s.handleGetJwtPublicKey))
-	http.HandleFunc("/register", kit.LogMiddleware(kit.CorsMiddleware(s.handleRegisterUser)))
-	http.HandleFunc("/logout", kit.LogMiddleware(kit.CorsMiddleware(s.handleLogout)))
-	http.HandleFunc("/login", kit.LogMiddleware(kit.CorsMiddleware(s.handlePasswordLogin)))
-	http.HandleFunc("/apitokens", kit.LogMiddleware(kit.CorsMiddleware(s.handleMakeApiTokens)))
-	http.HandleFunc("/accesstokens", kit.LogMiddleware(kit.CorsMiddleware(s.handleMakeAccessTokens)))
+	http.HandleFunc("/register", kit.LogMiddleware(s.handleRegisterUser))
+	http.HandleFunc("/logout", kit.LogMiddleware(s.handleLogout))
+	http.HandleFunc("/login", kit.LogMiddleware(s.handlePasswordLogin))
+	http.HandleFunc("/apitokens", kit.LogMiddleware(s.handleMakeApiTokens))
+	http.HandleFunc("/accesstokens", kit.LogMiddleware(s.handleMakeAccessTokens))
 }
 
 func (s *Server) Run() {
@@ -113,13 +113,13 @@ func (s *Server) handlePasswordLogin(w http.ResponseWriter, r *http.Request) {
 	refreshToken := s.jwtIssuer.StringifyJwt(
 		s.jwtIssuer.MintToken(userId, s.jwtIssuer.Name, RefreshTokenTTL),
 	)
-	kit.SetHttpOnlyCookie(w, "refreshToken", refreshToken, int(RefreshTokenTTL.Seconds()))
+	kit.SetHttpOnlyCookie(w, "refreshToken", refreshToken, int(RefreshTokenTTL.Seconds()), "http://localhost:8080")
 
 	// set a new access token
 	accessToken := s.jwtIssuer.StringifyJwt(
 		s.jwtIssuer.MintToken(userId, s.jwtAudience.Name, AccessTokenTTL),
 	)
-	kit.SetHttpOnlyCookie(w, "accessToken", accessToken, int(AccessTokenTTL.Seconds()))
+	kit.SetHttpOnlyCookie(w, "accessToken", accessToken, int(AccessTokenTTL.Seconds()), "http://localhost:8080")
 }
 
 func (s *Server) handleMakeAccessTokens(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +138,7 @@ func (s *Server) handleMakeAccessTokens(w http.ResponseWriter, r *http.Request) 
 		),
 	)
 
-	kit.SetHttpOnlyCookie(w, "accessToken", accessToken, int(AccessTokenTTL.Seconds()))
+	kit.SetHttpOnlyCookie(w, "accessToken", accessToken, int(AccessTokenTTL.Seconds()), "http://localhost:8080")
 }
 
 func (s *Server) handleMakeApiTokens(w http.ResponseWriter, r *http.Request) {
@@ -180,7 +180,7 @@ func (s *Server) handleMakeApiTokens(w http.ResponseWriter, r *http.Request) {
 		),
 	)
 
-	kit.SetHttpOnlyCookie(w, aud, apiToken, int(ApiTokenTTL.Seconds()))
+	kit.SetHttpOnlyCookie(w, aud, apiToken, int(ApiTokenTTL.Seconds()), "http://localhost:8080")
 }
 
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
