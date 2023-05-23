@@ -53,7 +53,7 @@ func (s *Server) Run() {
 func (s *Server) handleGetJwtPublicKey(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write(x509.MarshalPKCS1PublicKey(s.jwtIssuer.PublicKey()))
 	if err != nil {
-		kit.ErrInternal(w)
+		kit.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 }
@@ -66,18 +66,18 @@ func (s *Server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		kit.ErrBadRequest(w)
+		kit.Error(w, "could not decode JSON body", http.StatusBadRequest)
 		return
 	}
 
 	err = dbkit.RegisterUser(s.db, body.Username, body.Password)
 	if err != nil {
 		if errors.As(err, &dbkit.ErrUserExists) {
-			http.Error(w, err.Error(), http.StatusConflict)
+			kit.Error(w, err.Error(), http.StatusConflict)
 		} else if errors.As(err, &dbkit.ErrBadData) {
-			kit.ErrBadRequest(w)
+			kit.Error(w, "", http.StatusBadRequest)
 		} else {
-			kit.ErrInternal(w)
+			kit.Error(w, "", http.StatusInternalServerError)
 		}
 	}
 }
@@ -91,7 +91,7 @@ func (s *Server) handlePasswordLogin(w http.ResponseWriter, r *http.Request) {
 	// read body and validate
 	err := json.NewDecoder(r.Body).Decode(&reqBody)
 	if err != nil {
-		kit.ErrBadRequest(w)
+		kit.Error(w, "could not decode JSON body", http.StatusBadRequest)
 		return
 	}
 
@@ -99,11 +99,11 @@ func (s *Server) handlePasswordLogin(w http.ResponseWriter, r *http.Request) {
 	ok, err := verifyPassword(s.db, reqBody.Username, reqBody.Password)
 
 	if !ok || errors.As(err, &dbkit.ErrNoSuchUser) {
-		kit.ErrStatusUnauthorized(w)
+		kit.Error(w, "invalid username or password", http.StatusUnauthorized)
 		return
 	}
 	if err != nil {
-		kit.ErrInternal(w)
+		kit.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
@@ -126,7 +126,7 @@ func (s *Server) handleMakeAccessTokens(w http.ResponseWriter, r *http.Request) 
 	token, err := kit.GetTokenFromCookie(r, "refreshToken")
 
 	if err != nil || !s.jwtAudience.IsValid(token) {
-		kit.ErrStatusUnauthorized(w)
+		kit.Error(w, "Could not retrieve a valid JWT from cookie", http.StatusUnauthorized)
 		return
 	}
 
@@ -146,14 +146,14 @@ func (s *Server) handleMakeApiTokens(w http.ResponseWriter, r *http.Request) {
 	token, err := kit.GetTokenFromCookie(r, "accessToken")
 
 	if err != nil || !s.jwtAudience.IsValid(token) {
-		kit.ErrStatusUnauthorized(w)
+		kit.Error(w, "Could not retrieve a valid JWT from cookie", http.StatusUnauthorized)
 		return
 	}
 
 	// requested audience
 	aud := r.URL.Query().Get("aud")
 	if aud == "" {
-		kit.ErrBadRequest(w)
+		kit.Error(w, "'aud' query parameter uspecified", http.StatusBadRequest)
 		return
 	}
 
@@ -167,8 +167,8 @@ func (s *Server) handleMakeApiTokens(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if !nameIsValid {
-		kit.ErrStatusUnauthorized(w)
+	if !nameIsValid { // opaque error to hinder malicious probing on audience names
+		kit.Error(w, "", http.StatusUnauthorized)
 		return
 	}
 
