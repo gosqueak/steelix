@@ -211,7 +211,7 @@ func TestHandleMakeApitoken(t *testing.T) {
 	_ = newServer(db, iss, newAudience())
 
 	fakeIss := jwt.NewIssuer(rs256.GeneratePrivateKey(), "fakeissuer")
-	apiAudience := jwt.NewAudience(iss.PublicKey(), "MSGSERVICE")
+	apiAudience := jwt.NewAudience(iss.PublicKey(), "alakazam")
 
 	validToken := iss.StringifyJwt(iss.MintToken("testsubject", "AUTHAUD", time.Hour))
 	invalidSignatureToken := fakeIss.StringifyJwt(fakeIss.MintToken("testsubject", "AUTHAUD", time.Hour))
@@ -222,12 +222,12 @@ func TestHandleMakeApitoken(t *testing.T) {
 		apiAudienceName string
 		statusCode      int
 	}{
-		{"valid token and aud", validToken, "MSGSERVICE", 200},
+		{"valid token and aud", validToken, "alakazam", 200},
 		{"valid token, bad aud", validToken, "fakeaud", 401},
 		{"valid token no aud", validToken, "", 400},
-		{"invalid token, good aud", "badddatttaa", "MSGSERVICE", 401},
-		{"empty token, good aud", "", "MSGSERVICE", 401},
-		{"invalid signature on token", invalidSignatureToken, "MSGSERVICE", 401},
+		{"invalid token, good aud", "badddatttaa", "alakazam", 401},
+		{"empty token, good aud", "", "alakazam", 401},
+		{"invalid signature on token", invalidSignatureToken, "alakazam", 401},
 	}
 
 	for _, test := range tests {
@@ -291,7 +291,6 @@ func newDB() *sql.DB {
 	os.Remove(testDbFp)
 	return database.Load(testDbFp)
 }
-
 
 func newIssuer() jwt.Issuer {
 	return jwt.NewIssuer(

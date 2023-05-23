@@ -10,6 +10,8 @@ import (
 	"github.com/gosqueak/steelix/database"
 )
 
+const DbFileName = "dbSteelixDB.sqlite"
+
 func main() {
 	tm, err := team.Download(os.Getenv("TEAMFILE_URL"))
 
@@ -19,7 +21,7 @@ func main() {
 
 	steelix := tm.Member("steelix")
 
-	db := database.Load("users.sqlite")
+	db := database.Load(DbFileName)
 
 	keyBytes, err := rs256.LoadKeyBytes("jwtrsa.private")
 	if err != nil {
