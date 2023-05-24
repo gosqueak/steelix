@@ -37,6 +37,6 @@ func main() {
 		steelix.JWTInfo.AudienceName,
 	)
 
-	serv := api.NewServer(steelix.ListenAddress, db, iss, aud)
+	serv := api.NewServer(db, steelix.ListenAddress, "http://localhost:8080", iss, aud)
 	serv.Run()
 }

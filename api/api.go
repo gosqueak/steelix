@@ -25,14 +25,21 @@ const (
 var validAudNames []string = []string{"alakazam", "klefki"}
 
 type Server struct {
-	db          *sql.DB
-	addr        string
-	jwtIssuer   jwt.Issuer
-	jwtAudience jwt.Audience
+	db           *sql.DB
+	addr         string
+	jwtIssuer    jwt.Issuer
+	jwtAudience  jwt.Audience
+	clientOrigin string
 }
 
-func NewServer(addr string, db *sql.DB, iss jwt.Issuer, aud jwt.Audience) *Server {
-	return &Server{db, addr, iss, aud}
+func NewServer(db *sql.DB, addr, clientOrigin string, iss jwt.Issuer, aud jwt.Audience) *Server {
+	return &Server{
+		db:           db,
+		addr:         addr,
+		jwtIssuer:    iss,
+		jwtAudience:  aud,
+		clientOrigin: clientOrigin,
+	}
 }
 
 func (s *Server) ConfigureRoutes() {
@@ -40,8 +47,8 @@ func (s *Server) ConfigureRoutes() {
 	http.HandleFunc("/register", kit.LogMiddleware(s.handleRegisterUser))
 	http.HandleFunc("/logout", kit.LogMiddleware(s.handleLogout))
 	http.HandleFunc("/login", kit.LogMiddleware(s.handlePasswordLogin))
-	http.HandleFunc("/apitokens", kit.LogMiddleware(s.handleMakeApiTokens))
-	http.HandleFunc("/accesstokens", kit.LogMiddleware(s.handleMakeAccessTokens))
+	http.HandleFunc("/apitokens", kit.LogMiddleware(kit.TokenMiddleware(kit.CookieNameAccessToken, s.jwtAudience, s.handleMakeApiTokens)))
+	http.HandleFunc("/accesstokens", kit.LogMiddleware(kit.TokenMiddleware(kit.CookieNameRefreshToken, s.jwtAudience, s.handleMakeAccessTokens)))
 }
 
 func (s *Server) Run() {
@@ -113,22 +120,17 @@ func (s *Server) handlePasswordLogin(w http.ResponseWriter, r *http.Request) {
 	refreshToken := s.jwtIssuer.StringifyJwt(
 		s.jwtIssuer.MintToken(userId, s.jwtIssuer.Name, RefreshTokenTTL),
 	)
-	kit.SetHttpOnlyCookie(w, "refreshToken", refreshToken, int(RefreshTokenTTL.Seconds()), "http://localhost:8080")
+	kit.SetHttpOnlyCookie(w, s.clientOrigin, kit.CookieNameRefreshToken, refreshToken, int(RefreshTokenTTL.Seconds()))
 
 	// set a new access token
 	accessToken := s.jwtIssuer.StringifyJwt(
 		s.jwtIssuer.MintToken(userId, s.jwtAudience.Name, AccessTokenTTL),
 	)
-	kit.SetHttpOnlyCookie(w, "accessToken", accessToken, int(AccessTokenTTL.Seconds()), "http://localhost:8080")
+	kit.SetHttpOnlyCookie(w, s.clientOrigin, kit.CookieNameAccessToken, accessToken, int(AccessTokenTTL.Seconds()))
 }
 
 func (s *Server) handleMakeAccessTokens(w http.ResponseWriter, r *http.Request) {
-	token, err := kit.GetTokenFromCookie(r, "refreshToken")
-
-	if err != nil || !s.jwtAudience.IsValid(token) {
-		kit.Error(w, "Could not retrieve a valid JWT from cookie", http.StatusUnauthorized)
-		return
-	}
+	token := r.Context().Value(kit.CookieNameRefreshToken).(jwt.Jwt)
 
 	accessToken := s.jwtIssuer.StringifyJwt(
 		s.jwtIssuer.MintToken(
@@ -138,17 +140,10 @@ func (s *Server) handleMakeAccessTokens(w http.ResponseWriter, r *http.Request) 
 		),
 	)
 
-	kit.SetHttpOnlyCookie(w, "accessToken", accessToken, int(AccessTokenTTL.Seconds()), "http://localhost:8080")
+	kit.SetHttpOnlyCookie(w, s.clientOrigin, "accessToken", accessToken, int(AccessTokenTTL.Seconds()))
 }
 
 func (s *Server) handleMakeApiTokens(w http.ResponseWriter, r *http.Request) {
-	// TODO need to add revocation for all tokens
-	token, err := kit.GetTokenFromCookie(r, "accessToken")
-
-	if err != nil || !s.jwtAudience.IsValid(token) {
-		kit.Error(w, "Could not retrieve a valid JWT from cookie", http.StatusUnauthorized)
-		return
-	}
 
 	// requested audience
 	aud := r.URL.Query().Get("aud")
@@ -172,15 +167,16 @@ func (s *Server) handleMakeApiTokens(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	accessToken := r.Context().Value(kit.CookieNameAccessToken).(jwt.Jwt)
 	apiToken := s.jwtIssuer.StringifyJwt(
 		s.jwtIssuer.MintToken(
-			token.Body.Subject,
+			accessToken.Body.Subject,
 			aud,
 			ApiTokenTTL,
 		),
 	)
 
-	kit.SetHttpOnlyCookie(w, aud, apiToken, int(ApiTokenTTL.Seconds()), "http://localhost:8080")
+	kit.SetHttpOnlyCookie(w, s.clientOrigin, aud, apiToken, int(ApiTokenTTL.Seconds()))
 }
 
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {

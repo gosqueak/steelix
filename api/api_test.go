@@ -278,7 +278,13 @@ func TestHandleMakeApitoken(t *testing.T) {
 }
 
 func newServer(db *sql.DB, iss jwt.Issuer, aud jwt.Audience) *api.Server {
-	server := api.NewServer(":8080", db, iss, aud)
+	server := api.NewServer(
+		db,
+		"localhost:8081",
+		"localhost:8080",
+		iss,
+		aud,
+	)
 	http.DefaultServeMux = http.NewServeMux()
 
 	server.ConfigureRoutes()
