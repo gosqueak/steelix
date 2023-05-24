@@ -12,6 +12,7 @@ import (
 	"time"
 
 	kit "github.com/gosqueak/apikit"
+	middlew "github.com/gosqueak/apikit/middleware"
 	"github.com/gosqueak/jwt"
 	dbkit "github.com/gosqueak/steelix/database"
 )
@@ -43,12 +44,12 @@ func NewServer(db *sql.DB, addr, clientOrigin string, iss jwt.Issuer, aud jwt.Au
 }
 
 func (s *Server) ConfigureRoutes() {
-	http.HandleFunc("/jwtkeypub", kit.LogMiddleware(s.handleGetJwtPublicKey))
-	http.HandleFunc("/register", kit.LogMiddleware(s.handleRegisterUser))
-	http.HandleFunc("/logout", kit.LogMiddleware(s.handleLogout))
-	http.HandleFunc("/login", kit.LogMiddleware(s.handlePasswordLogin))
-	http.HandleFunc("/apitokens", kit.LogMiddleware(kit.TokenMiddleware(kit.CookieNameAccessToken, s.jwtAudience, s.handleMakeApiTokens)))
-	http.HandleFunc("/accesstokens", kit.LogMiddleware(kit.TokenMiddleware(kit.CookieNameRefreshToken, s.jwtAudience, s.handleMakeAccessTokens)))
+	http.HandleFunc("/jwtkeypub", middlew.Log(s.handleGetJwtPublicKey))
+	http.HandleFunc("/register", middlew.Log(s.handleRegisterUser))
+	http.HandleFunc("/logout", middlew.Log(s.handleLogout))
+	http.HandleFunc("/login", middlew.Log(s.handlePasswordLogin))
+	http.HandleFunc("/apitokens", middlew.Log(middlew.CheckToken(kit.CookieNameAccessToken, s.jwtAudience, s.handleMakeApiTokens)))
+	http.HandleFunc("/accesstokens", middlew.Log(middlew.CheckToken(kit.CookieNameRefreshToken, s.jwtAudience, s.handleMakeAccessTokens)))
 }
 
 func (s *Server) Run() {
