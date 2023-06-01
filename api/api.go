@@ -96,6 +96,10 @@ func (s *Server) handlePasswordLogin(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 
+	var respBody struct {
+		UserID string `json:"userID"`
+	}
+
 	// read body and validate
 	err := json.NewDecoder(r.Body).Decode(&reqBody)
 	if err != nil {
@@ -128,6 +132,12 @@ func (s *Server) handlePasswordLogin(w http.ResponseWriter, r *http.Request) {
 		s.jwtIssuer.MintToken(userId, s.jwtAudience.Name, AccessTokenTTL),
 	)
 	kit.SetHttpOnlyCookie(w, s.clientOrigin, kit.CookieNameAccessToken, accessToken, int(AccessTokenTTL.Seconds()))
+
+	respBody.UserID = userId
+
+	if err = json.NewEncoder(w).Encode(respBody); err != nil {
+		kit.Error(w, "", http.StatusInternalServerError)
+	}
 }
 
 func (s *Server) handleMakeAccessTokens(w http.ResponseWriter, r *http.Request) {
